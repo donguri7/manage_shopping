@@ -7,3 +7,4 @@ email_validator
 pytesseract
 pillow
 tesseract
+bleach  # Or any other version you find stable
