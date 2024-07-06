@@ -1,3 +1,4 @@
+<!-- 基本レイアウト -->
 <!doctype html>
 <html lang="en">
   <head>
@@ -8,19 +9,19 @@
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="{{ url_for('routes.index') }}">Shopping App</a>
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">Shopping App</a>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ml-auto">
           {% if current_user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('routes.logout') }}">Logout</a>
+              <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
             </li>
           {% else %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('routes.login') }}">Login</a>
+              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('routes.register') }}">Register</a>
+              <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
             </li>
           {% endif %}
         </ul>

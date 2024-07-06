@@ -24,5 +24,6 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
     quantity = db.Column(db.Integer)
+    frequency = db.Column(db.Integer, default=14) # 購入頻度(日数)
     last_purchased = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
