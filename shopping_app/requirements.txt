@@ -8,3 +8,4 @@ pytesseract
 pillow
 tesseract
 bleach  # Or any other version you find stable
+google-cloud-vision
