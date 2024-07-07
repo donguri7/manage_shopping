@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, ValidationError, Email, EqualTo
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField
+from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, NumberRange
 from app.models import User
 
 class LoginForm(FlaskForm):
@@ -26,3 +26,8 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email address.')
+
+class ItemForm(FlaskForm):
+    name = StringField('商品名', validators=[DataRequired()])
+    frequency = IntegerField('購入頻度（日）', validators=[DataRequired(), NumberRange(min=1)])
+    submit = SubmitField('更新')

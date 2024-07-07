@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}レシートアップロード - {{ super() }}{% endblock %}
+
+{% block content %}
+<h1 class="text-center">レシートアップロード</h1>
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="receipt">レシート画像を選択:</label>
+        <input type="file" class="form-control-file" id="receipt" name="receipt" accept="image/*" required>
+    </div>
+    <button type="submit" class="btn btn-primary">アップロード</button>
+</form>
+{% endblock %}
