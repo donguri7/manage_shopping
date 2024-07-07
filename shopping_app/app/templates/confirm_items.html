@@ -1,18 +1,31 @@
-<!-- 商品確認と頻度設定 -->
-{% extends "layout.html" %}
+{% extends "base.html" %}
+
+{% block title %}商品確認 - {{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center">確認と頻度設定</h1>
-    <form method="POST">
-        {% for item in items %}
-        <div class="form-group">
-            <input type="text" class="form-control" name="item_{{ loop.index }}" value="{{ item }}" required>
-            <label for="frequency_{{ loop.index }}">購入頻度（日）:</label>
-            <input type="number" class="form-control" name="frequency_{{ loop.index }}" value="30" min="1" required>
-        </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary btn-block">保存</button>
-    </form>
-</div>
+<h1 class="text-center">確認と頻度設定</h1>
+<form method="POST" id="itemForm">
+    <div id="itemsContainer">
+    {% for item in items %}
+    <div class="form-group item-group" id="item-{{ loop.index }}">
+        <input type="text" class="form-control" name="item_{{ loop.index }}" value="{{ item }}" required>
+        <label for="frequency_{{ loop.index }}">購入頻度（日）:</label>
+        <input type="number" class="form-control" name="frequency_{{ loop.index }}" value="30" min="1" required>
+        <button type="button" class="btn btn-danger btn-sm mt-2" onclick="deleteItem('{{ loop.index }}')">削除</button>
+    </div>
+    {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">保存</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteItem(index) {
+    const itemElement = document.getElementById(`item-${index}`);
+    if (itemElement) {
+        itemElement.remove();
+    }
+}
+</script>
 {% endblock %}

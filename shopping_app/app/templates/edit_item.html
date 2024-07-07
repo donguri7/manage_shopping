@@ -3,17 +3,18 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="text-center">商品編集</h1>
-    <form method="POST">
+    <form method="POST" action="{{ url_for('item.edit_item', id=item.id) }}">
+        {{ form.hidden_tag() }}
         <div class="form-group">
-            <label for="name">商品名:</label>
-            <input type="text" class="form-control" id="name" name="name" value="{{ item.name }}" required>
+            {{ form.name.label }}
+            {{ form.name(class="form-control", value=item.name) }}
         </div>
         <div class="form-group">
-            <label for="frequency">購入頻度（日）:</label>
-            <input type="number" class="form-control" id="frequency" name="frequency" value="{{ item.frequency }}" min="1" required>
+            {{ form.frequency.label }}
+            {{ form.frequency(class="form-control", min=1) }}
         </div>
-        <button type="submit" class="btn btn-primary btn-block">更新</button>
+        {{ form.submit(class="btn btn-primary btn-block") }}
     </form>
-    <a href="{{ url_for('routes.view_items') }}" class="btn btn-secondary mt-3">商品リストに戻る</a>
+    <a href="{{ url_for('item.view_items') }}" class="btn btn-secondary mt-3">商品リストに戻る</a>
 </div>
 {% endblock %}

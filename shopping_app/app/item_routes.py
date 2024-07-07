@@ -1,5 +1,4 @@
-# 商品管理関連のルート
-from flask import Blueprint, flash, redirect, url_for, render_template, request, session
+from flask import Blueprint, flash, redirect, url_for, render_template, request, session, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.forms import ItemForm
@@ -12,7 +11,7 @@ item = Blueprint('item', __name__)
 def add_item():
     form = ItemForm()
     if form.validate_on_submit():
-        item = Item(name=form.name.data, quantity=form.quantity.data, owner=current_user)
+        item = Item(name=form.name.data, frequency=form.frequency.data, owner=current_user)
         db.session.add(item)
         db.session.commit()
         flash('Item added successfully.')
@@ -43,7 +42,7 @@ def edit_item(id):
     if form.validate_on_submit():
         form.populate_obj(item)
         db.session.commit()
-        flash('Item has been updated.')
+        flash('Item has been updated successfully.')
         return redirect(url_for('item.view_items'))
     
     return render_template('edit_item.html', form=form, item=item)
@@ -65,16 +64,28 @@ def delete_item(id):
 @login_required
 def confirm_items():
     if request.method == 'POST':
+        items = []
         for key, value in request.form.items():
             if key.startswith('item_'):
-                item_name = value
-                frequency = int(request.form.get(f'frequency_{key[5:]}', 30))
-                item = Item(name=item_name, frequency=frequency, user_id=current_user.id)
+                index = key.split('_')[1]
+                frequency = request.form.get(f'frequency_{index}', 30)
+                items.append({
+                    'name': value,
+                    'frequency': int(frequency)
+                })
+        
+        try:
+            for item_data in items:
+                item = Item(name=item_data['name'], frequency=item_data['frequency'], user_id=current_user.id)
                 db.session.add(item)
-        db.session.commit()
-        flash('Items have been added to your list.')
+            db.session.commit()
+            flash('Items have been added to your list.')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while adding items. Please try again.')
+            current_app.logger.error(f"Error adding items: {e}")
+        
         return redirect(url_for('item.view_items'))
     
-    # GETリクエストの場合、セッションから抽出された商品名を取得
     items = session.get('product_names', [])
     return render_template('confirm_items.html', items=items)
