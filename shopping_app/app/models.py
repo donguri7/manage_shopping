@@ -22,4 +22,30 @@ class User(UserMixin, db.Model):
     purchase_list_items = db.relationship('PurchaseListItem', backref='owner', lazy='dynamic')
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(passw
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), index=True)
+    frequency = db.Column(db.Integer)  # 購入頻度(日数)
+    last_purchased = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    @validates('frequency')
+    def validate_frequency(self, key, frequency):
+        if frequency < 1:
+            raise ValueError("Frequency must be at least 1 day")
+        return frequency
+
+    def __repr__(self):
+        return f'<Item {self.name}>'
