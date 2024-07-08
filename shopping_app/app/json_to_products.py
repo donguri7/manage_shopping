@@ -2,6 +2,7 @@ import json
 import re
 from flask import current_app
 import os
+from datetime import datetime
 
 def clean_item_name(item):
     # 一般的なクリーニングルール
@@ -22,6 +23,11 @@ def is_valid_item(item):
         r'^[#♯]\d+$',
         r'^\*\d+$',
         r'^,\d+\)$',
+        r'^\W+$',  # 記号のみ
+        r'(営業時間|営業日|店舗|電話|TEL|FAX|住所|年中無休|開催|開店|会員|恒例)',  # 店舗情報に関する単語
+        r'(領収書|レシート|控え|明細|合計|小計|税|お預り|おつり)',  # レシート関連の単語
+        r'(セール|キャンペーン|特売|値引|割引|ポイント)',  # セール関連の単語
+        r'(配送|宅配|送料|お届け)',  # 配送関連の単語
     ]
     return (len(item) > 1 and 
             not any(re.search(pattern, item) for pattern in invalid_patterns) and
@@ -53,14 +59,28 @@ def extract_items(lines):
     return items
 
 def process_receipt(json_data):
-    return extract_items(json_data['lines'])
+    items = extract_items(json_data['lines'])
+    purchase_date = extract_purchase_date(json_data['lines'])
+    return items, purchase_date
+
+def extract_purchase_date(lines):
+    date_pattern = r'\d{4}年\d{1,2}月\d{1,2}日'
+    for line in lines:
+        match = re.search(date_pattern, line)
+        if match:
+            date_str = match.group()
+            try:
+                return datetime.strptime(date_str, '%Y年%m月%d日').date()
+            except ValueError:
+                continue
+    return datetime.now().date()  # デフォルトは現在の日付
 
 def json_to_products(json_path):
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        items = process_receipt(data)
+        items, purchase_date = process_receipt(data)
         
         # 結果をJSONファイルとして保存
         output_dir = current_app.config.get('PRODUCT_OUTPUT_FOLDER', 'product_outputs')
@@ -70,12 +90,17 @@ def json_to_products(json_path):
         output_filename = os.path.basename(json_path).replace('.json', '_products.json')
         output_path = os.path.join(output_dir, output_filename)
         
+        output_data = {
+            "商品名": items,
+            "購入日": purchase_date.isoformat()
+        }
+        
         with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump({"商品名": items}, f, ensure_ascii=False, indent=2)
+            json.dump(output_data, f, ensure_ascii=False, indent=2)
         
         return output_path
     except Exception as e:
-        print(f"Error processing JSON file: {e}")
+        current_app.logger.error(f"Error processing JSON file: {e}")
         return None
 
 # この部分は単体テスト用です。実際のアプリケーションでは削除または修正してください。

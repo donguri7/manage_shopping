@@ -21,7 +21,7 @@ def login():
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
         logger.info(f"User {user.username} logged in successfully")
-        return redirect(url_for('receipt.upload'))
+        return redirect(url_for('receipt.upload_receipt'))
     return render_template('login.html', title='Sign In', form=form)
 
 @auth.route('/logout')

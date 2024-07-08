@@ -4,15 +4,21 @@
 
 {% block content %}
 <h1 class="text-center">確認と頻度設定</h1>
+<p class="text-center">購入日: {{ purchase_date.strftime('%Y年%m月%d日') }}</p>
 <form method="POST" id="itemForm">
+    <input type="hidden" name="purchase_date" value="{{ purchase_date }}">
     <div id="itemsContainer">
     {% for item in items %}
-    <div class="form-group item-group" id="item-{{ loop.index }}">
-        <input type="text" class="form-control" name="item_{{ loop.index }}" value="{{ item }}" required>
-        <label for="frequency_{{ loop.index }}">購入頻度（日）:</label>
-        <input type="number" class="form-control" name="frequency_{{ loop.index }}" value="30" min="1" required>
-        <button type="button" class="btn btn-danger btn-sm mt-2" onclick="deleteItem('{{ loop.index }}')">削除</button>
-    </div>
+        {% set existing_item = existing_items.get(item) %}
+        <div class="form-group item-group" id="item-{{ loop.index }}">
+            <input type="text" class="form-control" name="item_{{ loop.index }}" value="{{ item }}" required>
+            <label for="frequency_{{ loop.index }}">購入頻度（日）:</label>
+            <input type="number" class="form-control" name="frequency_{{ loop.index }}" value="{{ existing_item.frequency if existing_item else 30 }}" min="1" required>
+            {% if existing_item %}
+                <small class="form-text text-muted">既存の商品です。現在の頻度: {{ existing_item.frequency }}日</small>
+            {% endif %}
+            <button type="button" class="btn btn-danger btn-sm mt-2" onclick="deleteItem('{{ loop.index }}')">削除</button>
+        </div>
     {% endfor %}
     </div>
     <button type="submit" class="btn btn-primary btn-block">保存</button>
@@ -27,5 +33,36 @@ function deleteItem(index) {
         itemElement.remove();
     }
 }
+
+document.getElementById('itemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    
+    // 削除された項目を除外した新しいFormDataを作成
+    const newFormData = new FormData();
+    newFormData.append('purchase_date', formData.get('purchase_date'));
+    let index = 1;
+    for (const [key, value] of formData.entries()) {
+        if (key.startsWith('item_') && document.getElementById(`item-${key.split('_')[1]}`)) {
+            newFormData.append(`item_${index}`, value);
+            newFormData.append(`frequency_${index}`, formData.get(`frequency_${key.split('_')[1]}`));
+            index++;
+        }
+    }
+    
+    // フォームを送信
+    fetch(form.action, {
+        method: 'POST',
+        body: newFormData
+    }).then(response => {
+        if (response.ok) {
+            window.location.href = '{{ url_for("item.view_items") }}';
+        } else {
+            alert('エラーが発生しました。もう一度お試しください。');
+        }
+    });
+});
 </script>
 {% endblock %}

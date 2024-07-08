@@ -1,8 +1,11 @@
 from flask import Blueprint, flash, redirect, url_for, render_template, request, session, jsonify, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import func
+from datetime import datetime, timedelta
 from app import db
 from app.forms import ItemForm
-from app.models import Item
+from app.models import Item, PurchaseListItem
+from datetime import datetime, timedelta
 
 item = Blueprint('item', __name__)
 
@@ -11,24 +14,27 @@ item = Blueprint('item', __name__)
 def add_item():
     form = ItemForm()
     if form.validate_on_submit():
-        item = Item(name=form.name.data, frequency=form.frequency.data, owner=current_user)
-        db.session.add(item)
+        # 既存の商品を検索
+        existing_item = Item.query.filter_by(name=form.name.data, user_id=current_user.id).first()
+        if existing_item:
+            # 既存の商品がある場合は更新
+            existing_item.frequency = form.frequency.data
+            flash('Item updated successfully.')
+        else:
+            # 新しい商品を追加
+            new_item = Item(name=form.name.data, frequency=form.frequency.data, user_id=current_user.id)
+            db.session.add(new_item)
+            flash('Item added successfully.')
         db.session.commit()
-        flash('Item added successfully.')
-        return redirect(url_for('item.item_added', item_id=item.id))
+        return redirect(url_for('item.view_items'))
     return render_template('add_item.html', title='Add Item', form=form)
-
-@item.route('/item_added/<int:item_id>', methods=['GET'])
-@login_required
-def item_added(item_id):
-    item = Item.query.get_or_404(item_id)
-    return render_template('item_added.html', item=item)
 
 @item.route('/view_items')
 @login_required
 def view_items():
     items = Item.query.filter_by(user_id=current_user.id).all()
-    return render_template('items.html', items=items)
+    current_date = datetime.utcnow().date()
+    return render_template('items.html', items=items, timedelta=timedelta, current_date=current_date)
 
 @item.route('/edit_item/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -40,6 +46,12 @@ def edit_item(id):
     
     form = ItemForm(obj=item)
     if form.validate_on_submit():
+        # 同じ名前の商品が既に存在するか確認
+        existing_item = Item.query.filter(Item.name == form.name.data, Item.id != id, Item.user_id == current_user.id).first()
+        if existing_item:
+            flash('An item with this name already exists.')
+            return render_template('edit_item.html', form=form, item=item)
+        
         form.populate_obj(item)
         db.session.commit()
         flash('Item has been updated successfully.')
@@ -60,32 +72,46 @@ def delete_item(id):
     flash('Item has been deleted.')
     return redirect(url_for('item.view_items'))
 
-@item.route('/confirm_items', methods=['GET', 'POST'])
+@item.route('/purchase_list')
 @login_required
-def confirm_items():
-    if request.method == 'POST':
-        items = []
-        for key, value in request.form.items():
-            if key.startswith('item_'):
-                index = key.split('_')[1]
-                frequency = request.form.get(f'frequency_{index}', 30)
-                items.append({
-                    'name': value,
-                    'frequency': int(frequency)
-                })
-        
-        try:
-            for item_data in items:
-                item = Item(name=item_data['name'], frequency=item_data['frequency'], user_id=current_user.id)
-                db.session.add(item)
-            db.session.commit()
-            flash('Items have been added to your list.')
-        except Exception as e:
-            db.session.rollback()
-            flash('An error occurred while adding items. Please try again.')
-            current_app.logger.error(f"Error adding items: {e}")
-        
-        return redirect(url_for('item.view_items'))
+def purchase_list():
+    purchase_list_items = PurchaseListItem.query.filter_by(user_id=current_user.id).all()
     
-    items = session.get('product_names', [])
-    return render_template('confirm_items.html', items=items)
+    today = datetime.utcnow().date()
+    tomorrow = today + timedelta(days=1)
+    
+    items_to_purchase = Item.query.filter(
+        Item.user_id == current_user.id,
+        func.date(func.julianday(Item.last_purchased) + Item.frequency) <= tomorrow
+    ).all()
+    
+    for item in items_to_purchase:
+        if not PurchaseListItem.query.filter_by(name=item.name, user_id=current_user.id).first():
+            new_item = PurchaseListItem(name=item.name, user_id=current_user.id)
+            db.session.add(new_item)
+    
+    db.session.commit()
+    
+    purchase_list_items = PurchaseListItem.query.filter_by(user_id=current_user.id).all()
+    
+    return render_template('purchase_list.html', items=purchase_list_items)
+
+@item.route('/delete_purchase_items', methods=['POST'])
+@login_required
+def delete_purchase_items():
+    item_ids = request.form.getlist('item_ids')
+    today = datetime.utcnow().date()
+    
+    for item_id in item_ids:
+        purchase_item = PurchaseListItem.query.get(item_id)
+        if purchase_item and purchase_item.user_id == current_user.id:
+            list_item = Item.query.filter_by(name=purchase_item.name, user_id=current_user.id).first()
+            if list_item:
+                list_item.last_purchased = today
+                db.session.add(list_item)
+            
+            db.session.delete(purchase_item)
+    
+    db.session.commit()
+    flash('選択された項目が削除され、次回購入日が更新されました。', 'success')
+    return redirect(url_for('item.purchase_list'))

@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_apscheduler import APScheduler
 import os
 import logging
 
@@ -9,6 +10,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
+scheduler = APScheduler()
 
 def create_app():
     app = Flask(__name__)
@@ -48,4 +50,14 @@ def create_app():
         app.logger.setLevel(logging.INFO)
         app.logger.info('Shopping app startup')
 
+    # スケジューラーの初期化と購入リスト更新ジョブの追加
+    init_scheduler(app)
+
     return app
+
+def init_scheduler(app):
+    scheduler.init_app(app)
+    scheduler.start()
+    
+    from app.tasks import update_purchase_list
+    scheduler.add_job(id='update_purchase_list', func=update_purchase_list, trigger='interval', hours=24)
