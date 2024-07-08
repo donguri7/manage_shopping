@@ -16,10 +16,13 @@
             <ul class="navbar-nav ml-auto">
                 {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('item.upload') }}">レシートアップロード</a>
+                        <a class="nav-link" href="{{ url_for('receipt.upload_receipt') }}">レシートアップロード</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('item.view_items') }}">商品リスト</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('item.purchase_list') }}">購入リスト</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('auth.logout') }}">ログアウト</a>
