@@ -1,33 +1,51 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField
-from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, NumberRange
-from app.models import User
+from datetime import datetime, timedelta
+from app import db, login
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.orm import validates
 
-class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember_me = BooleanField('Remember Me')
-    submit = SubmitField('Sign In')
+class PurchaseListItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    added_date = db.Column(db.DateTime, default=datetime.utcnow)
 
-class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Register')
+    def __repr__(self):
+        return f'<PurchaseListItem {self.name}>'
 
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different username.')
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+    password_hash = db.Column(db.String(128))
+    items = db.relationship('Item', backref='owner', lazy='dynamic')
+    purchase_list_items = db.relationship('PurchaseListItem', backref='owner', lazy='dynamic')
 
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different email address.')
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-class ItemForm(FlaskForm):
-    name = StringField('商品名', validators=[DataRequired()])
-    frequency = IntegerField('購入頻度（日）', validators=[DataRequired(), NumberRange(min=1)])
-    submit = SubmitField('更新')
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), index=True)
+    frequency = db.Column(db.Integer)  # 購入頻度(日数)
+    last_purchased = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    @validates('frequency')
+    def validate_frequency(self, key, frequency):
+        if frequency < 1:
+            raise ValueError("Frequency must be at least 1 day")
+        return frequency
+
+    def __repr__(self):
+        return f'<Item {self.name}>'
