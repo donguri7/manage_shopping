@@ -7,13 +7,15 @@
 {% if items %}
 <ul class="list-group">
     {% for item in items %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
+        {% set next_purchase = item.last_purchased + timedelta(days=item.frequency) %}
+        <li class="list-group-item d-flex justify-content-between align-items-center {% if next_purchase.date() <= current_date %}bg-warning{% endif %}">
             <div>
                 <h5>{{ item.name }}</h5>
                 <span class="badge badge-primary">{{ item.frequency }}日ごと</span>
                 {% if item.last_purchased %}
-                    {% set next_purchase = item.last_purchased + timedelta(days=item.frequency) %}
-                    <span class="badge badge-info">次回購入予定: {{ next_purchase.strftime('%Y年%m月%d日') }}</span>
+                    <span class="badge {% if next_purchase.date() <= current_date %}badge-danger{% else %}badge-info{% endif %}">
+                        次回購入予定: {{ next_purchase.strftime('%Y年%m月%d日') }}
+                    </span>
                 {% endif %}
             </div>
             <div>
