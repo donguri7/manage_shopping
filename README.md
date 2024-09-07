@@ -1,6 +1,5 @@
 # manage_shopping
 
-Title: Shopping Notification App Using Receipts
+タイトル レシートを利用した買い物通知アプリ
 
-Background: Graduate students and working professionals often have busy schedules, making it difficult to find time for shopping. Consequently, when essentials such as detergent, fabric softener, or groceries run out, they have to make frequent shopping trips, which can be a waste of time. Therefore, I want to develop an app that can automatically predict shortages of household items and groceries, even without the user keeping track of their stock levels, and suggest a consolidated shopping list to minimize the number of shopping trips.
-
+背景 大学院生や社会人は忙しく、買い物に時間を割くことが難しい。そのため、洗剤や柔軟剤、食料品などの必需品がなくなると、頻繁に買い物に行かなければならず、時間の無駄になってしまう。そこで私は、ユーザーが在庫状況を把握していなくても、日用品や食料品の欠品を自動的に予測し、買い物の回数を最小限に抑えるための統合買い物リストを提案できるアプリを開発する。
