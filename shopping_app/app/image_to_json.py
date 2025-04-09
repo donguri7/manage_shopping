@@ -5,6 +5,13 @@ import json
 from flask import current_app
 from werkzeug.utils import secure_filename
 import logging
+import base64
+
+if "GOOGLE_CREDENTIALS" in os.environ:
+    credentials_path = "/tmp/creds.json"
+    with open(credentials_path, "wb") as f:
+        f.write(base64.b64decode(os.environ["GOOGLE_CREDENTIALS"]))
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
 
 # Google Cloud vision client init
 client = vision.ImageAnnotatorClient()
@@ -92,7 +99,7 @@ def image_to_json(uploaded_file):
         logger.error(f"Error in image_to_json: {str(e)}")
         raise
 
-# この部分は単体テスト用なので、実際のアプリケーションでは削除または修正してください
+# この部分は単体テスト用なので、実際のアプリケーションでは削除
 if __name__ == "__main__":
     from flask import Flask
     app = Flask(__name__)
