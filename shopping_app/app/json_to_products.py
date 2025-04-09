@@ -43,10 +43,17 @@ def extract_items(lines):
     items = []
     start_flag = False
     end_flag = False
+    pre_line = ""
     for line in lines:
-        if re.search(r'領収書|明細|商品名', line):
+        if re.search(r'領収書|領収証|明細|商品名', line):
             start_flag = True
             continue
+
+        if not start_flag:
+            combine_line = pre_line + line
+            if re.search(r'領収書|領収証|明細|商品名', combine_line):
+                start_flag = True
+                continue
         
         if re.search(r'小計|合計|税|お預り', line):
             end_flag = True
@@ -55,6 +62,8 @@ def extract_items(lines):
             item = clean_item_name(line)
             if is_valid_item(item):
                 items.append(normalize_item_name(item))
+
+        pre_line = line
     
     return items
 
@@ -103,7 +112,7 @@ def json_to_products(json_path):
         current_app.logger.error(f"Error processing JSON file: {e}")
         return None
 
-# この部分は単体テスト用です。実際のアプリケーションでは削除または修正してください。
+# 単体テスト用
 if __name__ == "__main__":
     from flask import Flask
     app = Flask(__name__)
@@ -111,7 +120,7 @@ if __name__ == "__main__":
     
     with app.app_context():
         # テスト用のJSONファイルパス
-        test_json_path = 'path/to/your/test.json'
+        test_json_path = '/Users/takumi-iw/app_4_8/manage_shopping/shopping_app/json_outputs/mandai.json'
         result = json_to_products(test_json_path)
         if result:
             print(f"Products extracted and saved to: {result}")
