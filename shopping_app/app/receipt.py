@@ -1,6 +1,6 @@
 from flask import Blueprint, flash, redirect, url_for, render_template, request, current_app
 from flask_login import login_required, current_user
-import os, json
+import json
 from app.image_to_json import image_to_json
 from app.json_to_products import json_to_products
 from app.models import Item, db
