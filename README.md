@@ -1,6 +1,6 @@
-# 🛒 manage_shopping
+# 🛒 manage_shopping_web
 
-忙しい人のための買い物支援アプリ
+忙しい人のために買い物支援を行うWebアプリケーション
 
 <p align="center">
   <img width="1438" alt="Image" src="https://github.com/user-attachments/assets/40f07e1d-1db7-444e-8f49-c9120c5b2fdb" />
