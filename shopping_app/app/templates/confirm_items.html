@@ -5,7 +5,8 @@
 {% block content %}
 <h1 class="text-center">確認と頻度設定</h1>
 <p class="text-center">購入日: {{ purchase_date.strftime('%Y年%m月%d日') }}</p>
-<form method="POST" id="itemForm">
+
+<form method="POST">
     <input type="hidden" name="purchase_date" value="{{ purchase_date }}">
     <div id="itemsContainer">
     {% for item in items %}
@@ -34,35 +35,35 @@ function deleteItem(index) {
     }
 }
 
-document.getElementById('itemForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+// document.getElementById('itemForm').addEventListener('submit', function(e) {
+//     e.preventDefault();
     
-    const form = e.target;
-    const formData = new FormData(form);
+//     const form = e.target;
+//     const formData = new FormData(form);
     
-    // 削除された項目を除外した新しいFormDataを作成
-    const newFormData = new FormData();
-    newFormData.append('purchase_date', formData.get('purchase_date'));
-    let index = 1;
-    for (const [key, value] of formData.entries()) {
-        if (key.startsWith('item_') && document.getElementById(`item-${key.split('_')[1]}`)) {
-            newFormData.append(`item_${index}`, value);
-            newFormData.append(`frequency_${index}`, formData.get(`frequency_${key.split('_')[1]}`));
-            index++;
-        }
-    }
+//     // 削除された項目を除外した新しいFormDataを作成
+//     const newFormData = new FormData();
+//     newFormData.append('purchase_date', formData.get('purchase_date'));
+//     let index = 1;
+//     for (const [key, value] of formData.entries()) {
+//         if (key.startsWith('item_') && document.getElementById(`item-${key.split('_')[1]}`)) {
+//             newFormData.append(`item_${index}`, value);
+//             newFormData.append(`frequency_${index}`, formData.get(`frequency_${key.split('_')[1]}`));
+//             index++;
+//         }
+//     }
     
-    // フォームを送信
-    fetch(form.action, {
-        method: 'POST',
-        body: newFormData
-    }).then(response => {
-        if (response.ok) {
-            window.location.href = '{{ url_for("item.view_items") }}';
-        } else {
-            alert('エラーが発生しました。もう一度お試しください。');
-        }
-    });
-});
+//     // フォームを送信
+//     fetch(form.action, {
+//         method: 'POST',
+//         body: newFormData
+//     }).then(response => {
+//         if (response.ok) {
+//             window.location.href = '{{ url_for("item.view_items") }}';
+//         } else {
+//             alert('エラーが発生しました。もう一度お試しください。');
+//         }
+//     });
+// });
 </script>
 {% endblock %}

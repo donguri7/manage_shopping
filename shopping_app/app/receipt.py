@@ -1,6 +1,5 @@
 from flask import Blueprint, flash, redirect, url_for, render_template, request, current_app
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 import os, json
 from app.image_to_json import image_to_json
 from app.json_to_products import json_to_products
@@ -11,7 +10,7 @@ receipt = Blueprint('receipt', __name__)
 
 @receipt.route('/upload', methods=['GET', 'POST'])
 @login_required
-def upload_receipt():
+def upload():
     if request.method == 'POST':
         if 'receipt' not in request.files:
             flash('No file part')

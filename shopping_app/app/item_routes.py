@@ -1,6 +1,5 @@
-from flask import Blueprint, flash, redirect, url_for, render_template, request, session, jsonify, current_app
+from flask import Blueprint, flash, redirect, url_for, render_template, request, current_app
 from flask_login import login_required, current_user
-from sqlalchemy import func
 from datetime import datetime, timedelta
 from app import db
 from app.forms import ItemForm
@@ -33,6 +32,7 @@ def add_item():
 @login_required
 def view_items():
     items = Item.query.filter_by(user_id=current_user.id).all()
+    current_app.logger.info(f"User {current_user.username} has {len(items)} items.")
     current_date = datetime.utcnow().date()
     return render_template('items.html', items=items, timedelta=timedelta, current_date=current_date)
 
@@ -80,10 +80,12 @@ def purchase_list():
     today = datetime.utcnow().date()
     tomorrow = today + timedelta(days=1)
     
-    items_to_purchase = Item.query.filter(
-        Item.user_id == current_user.id,
-        func.date(func.julianday(Item.last_purchased) + Item.frequency) <= tomorrow
-    ).all()
+    all_items = Item.query.filter(Item.user_id == current_user.id).all()
+
+    items_to_purchase = [
+        item for item in all_items
+        if item.last_purchased + timedelta(days=item.frequency) <= tomorrow
+    ]
     
     for item in items_to_purchase:
         if not PurchaseListItem.query.filter_by(name=item.name, user_id=current_user.id).first():

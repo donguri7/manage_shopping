@@ -1,5 +1,4 @@
 from google.cloud import vision
-import io
 import os
 import json
 from flask import current_app
@@ -99,7 +98,7 @@ def image_to_json(uploaded_file):
         logger.error(f"Error in image_to_json: {str(e)}")
         raise
 
-# この部分は単体テスト用なので、実際のアプリケーションでは削除
+# 単体テスト用
 if __name__ == "__main__":
     from flask import Flask
     app = Flask(__name__)
@@ -107,13 +106,11 @@ if __name__ == "__main__":
     app.config['JSON_OUTPUT_FOLDER'] = 'json_outputs'
     
     with app.app_context():
-        # ここでファイルアップロードをシミュレートします
         class MockFile:
             def __init__(self, filename):
                 self.filename = filename
             
             def save(self, path):
-                # 実際のファイル保存処理はここでは行いません
                 pass
 
         mock_file = MockFile('example.jpg')

@@ -12,5 +12,5 @@ def index():
     items = Item.query.filter_by(user_id=current_user.id).all()
     notifications = [f"It's time to buy {item.name}!"
                      for item in items
-                     if datetime.utcnow() - item.last_purchased >= timedelta(days=item.frequency)]
+                     if datetime.utcnow().date() - item.last_purchased >= timedelta(days=item.frequency)]
     return render_template('index.html', title='Home', items=items, notifications=notifications)

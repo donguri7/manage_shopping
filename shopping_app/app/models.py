@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from app import db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -38,7 +38,7 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
     frequency = db.Column(db.Integer)  # 購入頻度(日数)
-    last_purchased = db.Column(db.DateTime, default=datetime.utcnow)
+    last_purchased = db.Column(db.Date, default=datetime.utcnow().date)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     @validates('frequency')

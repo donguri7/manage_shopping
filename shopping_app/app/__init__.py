@@ -7,7 +7,7 @@ import os
 import logging
 
 db = SQLAlchemy()
-migrate = Migrate()
+migrate = Migrate(directory='shopping_app/migrations')
 login = LoginManager()
 login.login_view = 'auth.login'
 scheduler = APScheduler()
